@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<head>
+{% extends "base.html" %}
+{% block content %}
+<form action="/create" method="POST">
+<div>
+    <input name="author" value="{{ user }}"/>
+        <label for="body">Body:</label>
+        <textarea id="body" name="body"></textarea>
+    </div>
+    <div class="button">
+        <button type="submit">create post</button>
+    </div>
+</form>
+{% endblock %}

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<head>
+{% extends "base.html" %}
+{% block content %}
+    {% with messages = get_flashed_messages() %} <a href="/new">create</a>
+        {% if post %}
+            <ul>
+             {% for post in post %}
+             <div class="col-xs-12 col-md-8">
+              <div align=left><li>{{ post.author }} | <a href="/edit/{{ post.id }}">edit</a> | <a href="/delete/{{ post.id }}">delete</a></li></div>
+              <div>{{ post.body }}</div>
+              </div>
+             {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+{% endblock %}

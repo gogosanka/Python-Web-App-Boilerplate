@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<head>
+{% extends "base.html" %}
+{% block content %}
+<form action="/222" method="POST">
+<div>
+		<input name="author" value="{{ post.author }}"/>
+		<input type="hidden" name="postid" value="{{ post.id }}"/>
+        <label for="body">Body:</label>
+        <textarea id="body" name="body">{{ post.body }}</textarea>
+    </div>
+    <div class="button">
+        <button type="submit">save changes</button>
+    </div>
+</form>
+{% endblock %}
