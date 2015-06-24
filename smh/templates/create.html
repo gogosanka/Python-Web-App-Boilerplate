@@ -4,7 +4,7 @@
 {% block content %}
 <form action="/create" method="POST">
 <div>
-    <input name="author" value="{{ user }}"/>
+    <input name="author" value="{{ user }}" type="hidden"/>{{ user }}
         <label for="body">Body:</label>
         <textarea id="body" name="body"></textarea>
     </div>

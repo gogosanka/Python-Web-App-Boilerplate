@@ -4,9 +4,10 @@
 {% block content %}
 <form action="/222" method="POST">
 <div>
-		<input name="author" value="{{ post.author }}"/>
+		<input name="author" value="{{ post.author }}" type="hidden"/>{{ post.author }}
 		<input type="hidden" name="postid" value="{{ post.id }}"/>
-        <label for="body">Body:</label>
+        </div><br>
+        <div>
         <textarea id="body" name="body">{{ post.body }}</textarea>
     </div>
     <div class="button">

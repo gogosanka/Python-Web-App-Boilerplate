@@ -11,7 +11,7 @@ from passlib.apps import custom_app_context as pwd_context
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     nickname = db.Column(db.String(32), index=True, unique=True)
-    # password_hash = db.Column(db.String(128))
+    #password_hash = db.Column(db.String(128))
     email = db.Column(db.String(120), index=True, unique=True)
     post = db.relationship('Post', backref='author', lazy='dynamic')
     images = db.relationship('Image', backref='uploader', lazy='dynamic')

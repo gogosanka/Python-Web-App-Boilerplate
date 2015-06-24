@@ -8,11 +8,13 @@ import json
 @app.route('/posts', methods=['GET', 'POST'])
 def posts():
     all_user_posts = Post.query.all()
+    session_user_identity = User.query.filter_by(nickname="gogosanka").first()
+    session_user_posts = Post.query.filter_by(author=session_user_identity).all()
     user = 'temp' #create session logins and place user object here
     return render_template('posts.html',
                             title="My Pages",
                             user=user,
-                            post=all_user_posts)
+                            post=session_user_posts)
 
 @app.route('/222', methods=['POST'])
 def editpost():
@@ -54,9 +56,10 @@ def create():
 
 @app.route('/new')
 def new():
-    user = 'temp' #create session logins and place user object here
+    session_user_identity = User.query.filter_by(nickname="gogosanka").first()
     return render_template('create.html',
-                            title="My Pages")
+                            title="My Pages",
+                            user = session_user_identity)
 
 @app.route('/')
 @app.route('/index')
