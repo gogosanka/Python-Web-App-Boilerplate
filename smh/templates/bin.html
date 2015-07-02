@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+{% extends "base.html" %}
+<head>
+</head>
+<body>
+{% block content %}
+{% with messages = get_flashed_messages() %}
+{% endwith %}
+<h1>Recycling Bin</h1>
+<div class="row">
+          <div class="col-md-12">
+          {% if post %}
+            <ul>
+              {% for post in post %}
+              {% if post.rebin == 'true' %}
+              <li>{{ post.title }}<br> <a href="/recycle/{{ post.id }}" class="glyphicon glyphicon-cancel"><i>undelete</i></a> | <a href="/delete/{{ post.id }}" class="glyphicon glyphicon-remove-circle"></a></li>
+              {% endif %}
+              {% endfor %}
+            </ul>
+          {% endif %}
+          </div>
+</div>
+
+{% endblock %}
+</body>
+
+

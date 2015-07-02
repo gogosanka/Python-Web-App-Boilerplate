@@ -1,0 +1,13 @@
+<!Doctype html>
+<head>
+{% extends "base.html" %}
+{% block content %}
+{% with messages = get_flashed_messages() %}
+{% endwith %}
+<form action="/login" method="POST">
+<input placeholder="username" name="username"/>
+<input placeholder="password" name="password"/>
+<button type="submit">Sign In</button>
+</form>
+
+{% endblock %}
