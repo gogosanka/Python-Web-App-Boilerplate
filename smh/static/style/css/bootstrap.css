@@ -11,10 +11,8 @@ html {
       -ms-text-size-adjust: 100%;
 }
 body {
-  margin: 0;
-  padding-top: 70px;
+  padding-top: 50px;
 }
-.navfriendly { padding-top: 70px; }
 article,
 aside,
 details,

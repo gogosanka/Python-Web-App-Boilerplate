@@ -2,16 +2,42 @@
 <head>
 {% extends "base.html" %}
 {% block content %}
-<form action="/222" method="POST">
-<div>
-		<input name="author" value="{{ post.author }}" type="hidden"/>{{ post.author }}
-		<input type="hidden" name="postid" value="{{ post.id }}"/>
-        </div><br>
-        <div>
-        <textarea id="body" name="body">{{ post.body }}</textarea>
-    </div>
-    <div class="button">
-        <button type="submit">save changes</button>
-    </div>
+<form class="form-horizontal" action="/update" method="POST">
+<fieldset>
+
+<!-- Form Name -->
+<legend>Edit Post</legend>
+
+<!-- Text input-->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="title"></label>  
+  <div class="col-md-4">
+  <input id="title" name="title" type="text" placeholder="title" class="form-control input-md" value="{{ post.title }}" required="">
+    
+  </div>
+</div>
+
+<!-- Textarea -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="body"></label>
+  <div class="col-md-4">                     
+    <textarea class="form-control" id="body" name="body">{{ post.body }}</textarea>
+  </div>
+</div>
+
+<!-- Hidden input -->
+
+<input name="author" value="{{ post.author }}" type="hidden"/>
+<input name="postid" value="{{ post.id }}" type="hidden"/>
+
+<!-- Button -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="submit"></label>
+  <div class="col-md-4">
+    <button id="submit" name="submit" class="btn btn-primary">save</button>
+  </div>
+</div>
+
+</fieldset>
 </form>
 {% endblock %}

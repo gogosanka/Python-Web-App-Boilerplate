@@ -2,14 +2,38 @@
 <head>
 {% extends "base.html" %}
 {% block content %}
-<form action="/create" method="POST">
-<div>
-    <input name="author" value="{{ user }}" type="hidden"/>{{ user }}
-        <label for="body">Body:</label>
-        <textarea id="body" name="body"></textarea>
-    </div>
-    <div class="button">
-        <button type="submit">create post</button>
-    </div>
-</form>
+<form class="form-horizontal" action="/create" method="POST">
+<fieldset>
+
+<!-- Form Name -->
+<legend>New Post</legend>
+
+<!-- Text input-->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="title"></label>  
+  <div class="col-md-4">
+  <input id="title" name="title" type="text" placeholder="untitled" class="form-control input-md" required="">
+    
+  </div>
+</div>
+
+<!-- Textarea -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="body"></label>
+  <div class="col-md-4">                     
+    <textarea class="form-control" id="body" name="body" placeholder="enter description here"></textarea>
+  </div>
+</div>
+
+<!-- Hidden input -->
+
+<input name="author" value="{{ user }}" type="hidden"/>
+
+<!-- Button -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="submit"></label>
+  <div class="col-md-4">
+    <button id="submit" name="submit" class="btn btn-primary">save</button>
+  </div>
+</div>
 {% endblock %}
