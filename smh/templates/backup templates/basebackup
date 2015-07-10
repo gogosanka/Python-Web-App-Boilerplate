@@ -1,0 +1,104 @@
+<!doctype html>
+{% extends "bootstrap/base.html" %}
+{% block title %}
+  {% if title %}
+    {{ title }}
+  {% else %}
+    Welcome to SMH
+  {% endif %}
+{% endblock %}
+
+<!-- template code begins for all page divs -->
+{% block body %}
+
+<!-- navigation bar goes here -->
+{% block navbar %}
+<div id="navigation-bar" class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container-fluid">
+        <div class="navbar-header"><a class="navbar-brand" href="/index">smh</a>
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-menubuilder"><span class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
+            </button>
+        </div>
+        <div class="collapse navbar-collapse navbar-menubuilder">
+            <ul class="nav navbar-nav navbar-right">
+                {% if current_user.is_authenticated() %}
+                <li><a href="{{ url_for('auth.logout') }}">Sign Out</a></li>
+                <li><a href="/posts">Posts</a></li>
+                <li><a href="/new">Create</a></li>
+                <li><a href="/bin" class="glyphicon glyphicon-trash">{{ count }}</a></li>
+                {% else %}
+                <li>Remove these links when done- should only appear when signed in</li>
+                <li><a href="{{ url_for('auth.login') }}">Sign In</a></li>
+                <li><a href="/posts">Posts</a></li>
+                <li><a href="/new">Create</a></li>
+                <li><a href="/bin" class="glyphicon glyphicon-trash">{{ count }}</a></li>
+                {% endif %}              
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+<body>
+    <div class="container">
+    <div class="row">
+      <div class="col-md-8">
+      {% if album %}
+      <legend>{{ album.title }} by {{ album.author }}</legend>
+      {% endif %}
+      {% block content %}
+        Default content until overwritten.
+      {% endblock %}
+      </div>
+      <div class="col-md-4"> 
+
+
+<div class="col-md-3 sidebar-nav-fixed affix">
+
+<div class="panel panel-default">
+
+<div class="panel-thumbnail">
+<!-- Check if a cover photo is available for logged in user -->
+
+{% if cover %}
+<img src="{{ cover.default }}" class="img-responsive"></div>
+{% else %}
+<img src="http://www.bootply.com/assets/example/bg_5.jpg" class="img-responsive"></div>
+{% endif %}
+<!-- end cover -->
+
+<!-- Load user data if logged in -->
+{% if user %}
+<div class="panel-body">
+<p class="lead">{{ user }}</p>
+<p>45 Followers, 13 Posts</p>
+<!-- End loading user data if logged in -->
+
+<p class="lead">Welcome, Stranger!</p>
+<p><i>Sign up</i></p>
+<form action="/login" method="POST">
+<input placeholder="username" name="username"/>
+<input placeholder="password" name="password"/>
+<button type="submit">Create Account</button>
+</form>
+{% endif %}
+
+<p>
+<img src="https://lh3.googleusercontent.com/uFp_tsTJboUY7kue5XAsGA=s28" width="28px" height="28px">
+</p>
+</div>
+</div>
+</div>
+
+
+        </div>
+      </div>
+    </div>
+        </div>
+      </div>
+    </div>
+  <script type="text/javascript" src="{{ url_for('static', filename='style/js/bootstrap.js') }}"></script>
+  </body>
+
+
+<!-- endblock for block body -->
+{% endblock %}

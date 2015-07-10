@@ -1,0 +1,110 @@
+{% block navbar %}
+<!--<html>
+  <head>
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style/css/bootstrap.css') }}"> -->
+  <head>
+    <div class="container-fluid" role="navigation">
+      <div class="row">
+        <div class="col-md-12">
+          {% if title %}
+          <title>{{ title }}</title>
+          {% else %}
+          <title>Welcome to SMH</title>
+          {% endif %}
+          <ul class="nav nav-tabs navbar-fixed-top">
+            <li>
+              <a href="/">Home</a>
+            </li>
+            <li>
+              <a href="/posts">Posts</a>
+            </li>
+            <li>
+              <a href="/new">Create</a>
+            </li>
+            <li>
+              <a href="/bin" class="glyphicon glyphicon-trash">{{ count }}</a>
+            </li>
+              {% if current_user.is_authenticated() %}
+            <li>
+              <a href="{{ url_for('auth.logout') }}">Sign Out</a>
+            </li>
+              {% else %}
+            <li>
+              <a href="{{ url_for('auth.login') }}">Sign In</a>
+            </li>
+            {% endif %}
+          </ul>
+          </div></div></div></head>
+        {% endblock %}
+
+
+      {% block content %}
+        
+
+<body>
+    <div class="container">
+    <div class="row">
+      <div class="col-md-8">
+      {% if album %}
+      <legend>{{ album.title }} by {{ album.author }}</legend>
+      {% endif %}
+      {% block body %}
+        Default content until overwritten.
+      {% endblock %}
+      </div>
+      <div class="col-md-4"> 
+
+
+<div class="col-md-3 sidebar-nav-fixed affix">
+
+<div class="panel panel-default">
+
+<div class="panel-thumbnail">
+<!-- Check if a cover photo is available for logged in user -->
+
+{% if cover %}
+<img src="{{ cover.default }}" class="img-responsive"></div>
+{% else %}
+<img src="http://www.bootply.com/assets/example/bg_5.jpg" class="img-responsive"></div>
+{% endif %}
+<!-- end cover -->
+
+<!-- Load user data if logged in -->
+{% if user %}
+<div class="panel-body">
+<p class="lead">{{ user }}</p>
+<p>45 Followers, 13 Posts</p>
+<!-- End loading user data if logged in -->
+
+<p class="lead">Welcome, Stranger!</p>
+<p><i>Sign up</i></p>
+<form action="/login" method="POST">
+<input placeholder="username" name="username"/>
+<input placeholder="password" name="password"/>
+<button type="submit">Create Account</button>
+</form>
+{% endif %}
+
+<p>
+<img src="https://lh3.googleusercontent.com/uFp_tsTJboUY7kue5XAsGA=s28" width="28px" height="28px">
+</p>
+</div>
+</div>
+</div>
+
+
+        </div>
+      </div>
+    </div>
+        </div>
+      </div>
+    </div>
+  <script type="text/javascript" src="{{ url_for('static', filename='style/js/bootstrap.js') }}"></script>
+  </body>
+
+
+
+      {% endblock %}
+  
+
+</html>

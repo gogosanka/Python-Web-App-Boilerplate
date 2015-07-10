@@ -1,0 +1,12 @@
+<!Doctype html>
+{% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+{% block content %}
+{% with messages = get_flashed_messages() %}
+{% endwith %}
+
+{{ form.hidden_tag() }}
+{{ wtf.quick_form(form) }}
+
+{% endblock %}

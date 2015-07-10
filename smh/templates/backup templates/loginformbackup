@@ -1,0 +1,34 @@
+
+<form class="form-horizontal" action="{{ url_for('auth.login') }}" method="POST">
+<fieldset>
+
+<!-- Form Name -->
+<legend>Log In</legend>
+
+<!-- Text input-->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="email"></label>  
+  <div class="col-md-4" class="form-control input-md">
+  {{ form.email() }}
+  </div>
+</div>
+
+<!-- Textarea -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="password"></label>
+  <div class="col-md-4">                     
+    {{ form.password() }}
+  </div>
+</div>
+
+<!-- Hidden input -->
+
+
+
+<!-- Button -->
+<div class="form-group">
+  <label class="col-md-4 control-label" for="submit"></label>
+  <div class="col-md-4">
+    {{ form.submit() }}
+  </div>
+</div></fieldset></form>
