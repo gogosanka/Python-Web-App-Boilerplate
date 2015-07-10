@@ -6,16 +6,16 @@
 <fieldset>
 
 <!-- Form Name -->
-<legend>New Post</legend>
-
-<!-- Text input-->
-<div class="form-group">
+<legend><div class="form-group">
   <label class="col-md-4 control-label" for="title"></label>  
   <div class="col-md-4">
   <input id="title" name="title" type="text" placeholder="untitled" class="form-control input-md" required="">
     
   </div>
-</div>
+</div></legend>
+
+<!-- Text input-->
+
 
 <!-- Textarea -->
 <div class="form-group">
@@ -24,16 +24,15 @@
     <textarea class="form-control" id="body" name="body" placeholder="enter description here"></textarea>
   </div>
 </div>
-
 <!-- Hidden input -->
 
-<input name="author" value="{{ user }}" type="hidden"/>
+<input name="author" value="{{ current_user.nickname }}" type="hidden"/>
 
 <!-- Button -->
 <div class="form-group">
   <label class="col-md-4 control-label" for="submit"></label>
   <div class="col-md-4">
-    <button id="submit" name="submit" class="btn btn-primary">save</button>
+    <button id="submit" name="submit" class="btn btn-primary">Submit</button>
   </div>
-</div>
+</div></fieldset></form>
 {% endblock %}

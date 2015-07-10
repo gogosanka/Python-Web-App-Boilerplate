@@ -10,11 +10,11 @@
 <h1>Recycling Bin</h1>
 <div class="row">
           <div class="col-md-12">
-          {% if post %}
+          {% if bin_posts %}
             <ul>
-              {% for post in post %}
+              {% for post in bin_posts %}
               {% if post.rebin == 'true' %}
-              <li>{{ post.title }}<br> <a href="/recycle/{{ post.id }}" class="glyphicon glyphicon-cancel"><i>undelete</i></a> | <a href="/delete/{{ post.id }}" class="glyphicon glyphicon-remove-circle"></a></li>
+              <li>{{ post.title }} <a href="/recycle/{{ post.id }}" class="glyphicon glyphicon-cancel"><i>undelete</i></a> | <a href="/delete/{{ post.id }}" class="glyphicon glyphicon-remove-circle"></a></li>
               {% endif %}
               {% endfor %}
             </ul>

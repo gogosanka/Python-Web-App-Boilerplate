@@ -1,6 +1,11 @@
 from smh import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask.ext.login import UserMixin
+from smh import lm
+
+@lm.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 '''the db.Model class has a all() method which queries the db
    and returns all the db rows created. For example,
@@ -9,13 +14,13 @@ from flask.ext.login import UserMixin
    the Post class is defined below, and has a relationship within
    the User class, which is why this works.'''
 
-class User(UserMixin, db.Model):
-    __tablename__ = 'users'
+class User(db.Model, UserMixin):
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     nickname = db.Column(db.String(32), index=True, unique=True)
     email = db.Column(db.String(64), index=True, unique=True)
     post = db.relationship('Post', backref='author', lazy='dynamic')
-    album = db.relationship('Album', backref='author', lazy='dynamic')
+    #album = db.relationship('Album', backref='author', lazy='dynamic')
     images = db.relationship('Image', backref='author', lazy='dynamic')
     created = db.Column(db.DateTime)
     password_hash = db.Column(db.String(128))
@@ -27,9 +32,8 @@ class User(UserMixin, db.Model):
         self.password_hash = generate_password_hash(password)
     def verify_password(self,password):
         return check_password_hash(self.password_hash,password)
-    is_authenticated = True
-    is_active = True
-    is_anonymous = False
+    def is_anonymous():
+        return False
     def get_id(self):
         return (self.id)
     def __repr__(self):
@@ -41,6 +45,7 @@ class Image(db.Model):
     timestamp = db.Column(db.DateTime)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     post_body = db.Column(db.String(500), db.ForeignKey('post.body'))
+
 
 class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -54,6 +59,7 @@ class Album(db.Model):
     timestamp = db.Column(db.DateTime)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     #create an association table for the many-to-many relationship
+
 
 tags = db.Table('tags', db.Column('tag_id', db.Integer, db.ForeignKey('tag.id')), db.Column('post_id', db.Integer, db.ForeignKey('post.id')))
 

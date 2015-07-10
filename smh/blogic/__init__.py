@@ -31,9 +31,9 @@ def recycle(post):
 
 def new(post,author,title="Untitled"):
     '''create a new post.'''
-    post_author = User.query.filter_by(nickname=author).first()
-    post_record = Post(body=post, author=post_author, title=title, rebin='false')
-    db.session.add(post_author,post_record)
+    user = User.query.filter_by(nickname=author).first()
+    entry = Post(body=post, author=user, title=title, rebin='false')
+    db.session.add(entry)
     db.session.commit()
 
 def check_username(username,password):
@@ -42,4 +42,3 @@ def check_username(username,password):
     if passw == password:
         session['current_user'] = username
         return redirect(url_for('posts'))
-    

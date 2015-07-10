@@ -1,13 +1,12 @@
 <!Doctype html>
-<head>
 {% extends "base.html" %}
+{% import "bootstrap/wtf.html" as wtf %}
+
 {% block content %}
 {% with messages = get_flashed_messages() %}
 {% endwith %}
-<form action="/login" method="POST">
-<input placeholder="username" name="username"/>
-<input placeholder="password" name="password"/>
-<button type="submit">Sign In</button>
-</form>
+
+{{ form.hidden_tag() }}
+{{ wtf.quick_form(form) }}
 
 {% endblock %}
