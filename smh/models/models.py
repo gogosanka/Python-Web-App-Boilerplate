@@ -14,15 +14,35 @@ def load_user(user_id):
    the Post class is defined below, and has a relationship within
    the User class, which is why this works.'''
 
+followers = db.Table('followers',
+    db.Column('follower_id', db.Integer, db.ForeignKey('user.id')),
+    db.Column('followed_id', db.Integer, db.ForeignKey('user.id'))
+)
+
+tags = db.Table('tags',
+    db.Column('tag_id', db.Integer, db.ForeignKey('tag.id')),
+    db.Column('post_id', db.Integer, db.ForeignKey('post.id'))
+) 
+
 class User(db.Model, UserMixin):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     nickname = db.Column(db.String(32), index=True, unique=True)
     email = db.Column(db.String(64), index=True, unique=True)
     post = db.relationship('Post', backref='author', lazy='dynamic')
-    #album = db.relationship('Album', backref='author', lazy='dynamic')
+    album = db.relationship('Album', backref='author', lazy='dynamic')
     images = db.relationship('Image', backref='author', lazy='dynamic')
     created = db.Column(db.DateTime)
+    about_me =db.Column(db.String(140))
+    last_seen = db.Column(db.DateTime)
+    followed = db.relationship('User',
+                                secondary=followers,
+                                primaryjoin=(followers.c.follower_id == id),
+                                secondaryjoin=(followers.c.followed_id == id),
+                                backref=db.backref('followers', lazy='dynamic'),
+                                lazy='dynamic')
+    def followed_posts(self):
+        return Post.query.join(followers, (followers.c.followed_id == Post.user_id)).filter(followers.c.follower_id == self.id).order_by(Post.timestamp.desc()) #read this thoroughly to understand it
     password_hash = db.Column(db.String(128))
     @property
     def password(self):
@@ -38,20 +58,29 @@ class User(db.Model, UserMixin):
         return (self.id)
     def __repr__(self):
         return (self.nickname)
+    def follow(self, user):
+        if not self.is_following(user):
+            self.followed.append(user)
+            return self
+    def unfollow(self, user):
+        if self.is_following(user):
+            self.followed.remove(user)
+            return self
+    def is_following(self, user):
+        return self.followed.filter(followers.c.followed_id == user.id).count() > 0
 
 class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     image = db.Column(db.LargeBinary)
     timestamp = db.Column(db.DateTime)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    post_body = db.Column(db.String(500), db.ForeignKey('post.body'))
+    post_id = db.Column(db.String(500), db.ForeignKey('post.id'))
 
 
 class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     text = db.Column(db.String(20))
     timestamp = db.Column(db.DateTime)
-    #create an association table for the many-to-many relationship
 
 class Album(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -60,20 +89,19 @@ class Album(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     #create an association table for the many-to-many relationship
 
-
-tags = db.Table('tags', db.Column('tag_id', db.Integer, db.ForeignKey('tag.id')), db.Column('post_id', db.Integer, db.ForeignKey('post.id')))
+class Cover(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    cover = db.Column(db.LargeBinary)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    main = db.Column(db.Integer)
 
 class Post(db.Model):
-    #unique id of the post
     id = db.Column(db.Integer, primary_key=True)
     rebin = db.Column(db.String(5))
     hidden = db.Column(db.String(5))
-    #the text data of the post (can be null)
     body = db.Column(db.String(500))
     title = db.Column(db.String(32))
-    #the timestamp for each post created
     timestamp = db.Column(db.DateTime)
-    #the user who wrote the post (foreign key)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     album_id = db.Column(db.Integer, db.ForeignKey('album.id'))
     tags = db.relationship('Tag', secondary = tags, backref=db.backref('posts', lazy='dynamic'))
@@ -82,3 +110,4 @@ class Post(db.Model):
     def __repr__(self):
         repre = "%r" % self.body
         return str(repre)
+

@@ -15,8 +15,8 @@ class NameForm(Form):
 
 class SignupForm(Form):
     email = StringField('Email', validators=[Required(), Length(1, 64), Email()])
-    confirm = PasswordField('Password')
-    password = PasswordField('Password', validators=[Required(), EqualTo('confirm', message='Passwords must match!')])
-    nickname = StringField('Username', validators=[Required(), Length(1, 64)])
+    password = PasswordField('Password', validators=[Required()])
+    confirm = PasswordField('Password', validators=[Required(), EqualTo('password', message='Passwords do not match!')])
+    nickname = StringField('Username', validators=[Required(), Length(1, 16)]) #confirm if making name longer than 16 handles properly
     remember_me = BooleanField('Keep me logged in')
     submit = SubmitField('Sign Up')

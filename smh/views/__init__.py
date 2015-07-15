@@ -6,9 +6,9 @@ from smh.models.models import User, Post
 from datetime import datetime
 from smh.auth import *
 
-@app.route('/posts', methods=['GET', 'POST'])
+@app.route('/posts/<nickname>', methods=['GET', 'POST'])
 @login_required
-def posts():
+def posts(nickname):
     feed = Post.query.filter_by(rebin='false').all()
     follower = '0 for now' #count for followers. will need to update the db model
     user = 'Stranger'
@@ -30,9 +30,130 @@ def posts():
                                 feed=feed)
     return redirect(url_for('auth.login'))
 
-@app.route('/bin', methods=['GET', 'POST'])
+#user profile page is the same page that showcases their posts to other users. Also known as magazines in development.
+#magazines should have a banner, a grid of recent work, a word cloud of tags that are used by the user, a follow button
+#clicking on an image should be a modal popup of the description, also known as tips. if they are videos, it should embed
+#is this loa??? can i really have dating, gaming, trading, and content creation in this app??? baybae?
+#barter with friends, family, strangers
+#anonymous dating, flirting
+#showcase your work, art, fashion, etc, with magazines
+#create announcements for those who follow you or link your twitter
+#boston's own interaction application, interapp...we'll see. even add the "home-for-dinner" interface for the gamers meetup module.
+#that's it. it's a moduler networking tool that has a few core apps from viewbook, LOA, and Bayfarm
+#also add an inbox feature that works across the main app
+@app.route('/profile/<nickname>', methods=['GET', 'POST'])
+def profile(nickname):
+    feed = Post.query.filter_by(rebin='false').all()
+    follower = '0 for now' #count for followers. will need to update the db model
+    user = User.query.filter_by(nickname=nickname).first()
+    if user:
+        posts = Post.query.filter_by(author=user).all()
+        posts_count = Post.query.filter_by(author=user, rebin='false').count()
+        bin_posts = Post.query.filter_by(author=user, rebin='true').all() #all recycled posts object        
+        bin_count = Post.query.filter_by(author=user, rebin='true').count() #recycled posts count
+        return render_template('profile.html',
+                                title="My Pages",
+                                user=user,
+                                post=posts,
+                                posts_count=posts_count,
+                                bin_posts=bin_posts,
+                                bin_count=bin_count,
+                                follower=follower)
+    return redirect(url_for('discover'))
+
+@app.route('/update', methods=['POST'])
 @login_required
-def bin():
+def update_post():
+    body = request.form['body']
+    author = request.form['author']
+    postid = request.form['postid']
+    title = request.form['title']
+    post = Post.query.get(postid)
+    if post.author.nickname == current_user.nickname:
+        blogic.update(body,author,postid,title)
+        return redirect(url_for('posts', nickname=current_user.nickname))
+    return redirect(url_for('posts', nickname=current_user.nickname))
+
+@app.route('/edit/<int:postid>/', methods=['GET'])
+@login_required
+def edit(postid):
+    feed = Post.query.filter_by(rebin='false').all()
+    follower = '0 for now' #count for followers. will need to update the db model
+    user = 'Stranger'
+    if current_user.is_authenticated():
+        user = User.query.filter_by(nickname=current_user.nickname).first()
+        posts_count = Post.query.filter_by(author=user, rebin='false').count()
+        bin_posts = Post.query.filter_by(author=user, rebin='true').all() #all recycled posts object        
+        bin_count = Post.query.filter_by(author=user, rebin='true').count() #recycled posts count
+        post = Post.query.get(postid)
+        if post:
+            if post.author.nickname == current_user.nickname:
+                return render_template('edit.html',
+                                    title="Edit Post",
+                                    user=user,
+                                    post=post, #recognize that it is written singular tense here, as we are showing 1 post not multiple
+                                    posts_count=posts_count,
+                                    bin_posts=bin_posts,
+                                    bin_count=bin_count,
+                                    follower=follower)
+            else:
+                return redirect(url_for('posts'))
+        return render_template('404.html')
+    else:
+        return render_template('404.html')
+
+@app.route('/show/<int:postid>/', methods=['GET'])
+@login_required
+def show(postid):
+    feed = Post.query.filter_by(rebin='false').all()
+    follower = '0 for now' #count for followers. will need to update the db model
+    user = 'Stranger'
+    if current_user.is_authenticated():
+        user = User.query.filter_by(nickname=current_user.nickname).first()
+        posts_count = Post.query.filter_by(author=user, rebin='false').count()
+        bin_posts = Post.query.filter_by(author=user, rebin='true').all() #all recycled posts object        
+        bin_count = Post.query.filter_by(author=user, rebin='true').count() #recycled posts count
+        post = Post.query.get(postid)
+        if post:
+            return render_template('show.html',
+                                    title="View Post",
+                                    user=user,
+                                    post=post, #recognize that it is written singular tense here, as we are showing 1 post not multiple
+                                    posts_count=posts_count,
+                                    bin_posts=bin_posts,
+                                    bin_count=bin_count,
+                                    follower=follower)
+    else:
+        return render_template('404.html')
+
+@app.route('/delete/<postid>/', methods=['GET'])
+@login_required
+def delete(postid):
+    post = Post.query.filter_by(id=postid).first()
+    if post:
+        blogic.delete(post)
+        flash("Deleted post!")
+        return redirect(url_for('bin', nickname=current_user.nickname))
+    else:
+        return render_template('404.html')
+
+@app.route('/recycle/<postid>/', methods=['GET'])
+@login_required
+def recycle(postid):
+    post = Post.query.filter_by(id=postid).first()
+    if post:
+        blogic.recycle(post)
+        if post.rebin == 'true':
+            flash("Sent to recycling bin!")
+            return redirect(url_for('posts', nickname=current_user.nickname))
+        flash("Restored post successfully!")
+        return redirect(url_for('bin', nickname=current_user.nickname))
+    else:
+        return render_template('404.html')
+
+@app.route('/<nickname>/bin', methods=['GET', 'POST'])
+@login_required
+def bin(nickname=current_user):
     feed = Post.query.filter_by(rebin='false').all()
     follower = '0 for now' #count for followers. will need to update the db model
     user = 'Stranger'
@@ -58,85 +179,33 @@ def bin():
                             user=user,
                             follower=follower)
 
-@app.route('/update', methods=['POST'])
-@login_required
-def update_post():
-    body = request.form['body']
-    author = request.form['author']
-    postid = request.form['postid']
-    title = request.form['title']
-    blogic.update(body,author,postid,title)
-    return redirect(url_for('posts'))
-
-@app.route('/edit/<int:postid>/', methods=['GET'])
-@login_required
-def edit(postid):
-    post = Post.query.get(postid)
-    if post:
-        return render_template('edit.html',
-                            title="Edit Post",
-                            post=post)
-    else:
-        return render_template('404.html')
-
-@app.route('/show/<int:postid>/', methods=['GET'])
-@login_required
-def show(postid):
-    post = Post.query.get(postid)
-    if post:
-        return render_template('show.html',
-                            title="View Post",
-                            post=post)
-    else:
-        return render_template('404.html')
-
-
-@app.route('/delete/<postid>/', methods=['GET'])
-@login_required
-def delete(postid):
-    post = Post.query.filter_by(id=postid).first()
-    if post:
-        blogic.delete(post)
-        return redirect(url_for('bin'))
-    else:
-        return render_template('404.html')
-
-@app.route('/recycle/<postid>/', methods=['GET'])
-@login_required
-def recycle(postid):
-    post = Post.query.filter_by(id=postid).first()
-    if post:
-        blogic.recycle(post)
-        if post.rebin == 'true':
-            return redirect(url_for('posts'))
-        return redirect(url_for('bin'))
-    else:
-        return render_template('404.html')
 
 @app.route('/create', methods=['POST'])
 @login_required
 def create():
+    user = User.query.filter_by(nickname=current_user.nickname).first()
     post = request.form['body']
     author = request.form['author']
     title = request.form['title']
     if post:
         if author:
             blogic.new(post,author,title)
-            return redirect(url_for('posts'))
+            flash("created post successfully!")
+            return redirect(url_for('posts', nickname=current_user.nickname))
     else:
         return render_template('404.html')
 
-@app.route('/template')
-def template():
-    return render_template('index2.html')
+@app.route('/nopage')
+def no_page():
+    return render_template('404.html')
 
 @app.route('/modal')
 def modal():
     return render_template('modal.html')
 
-@app.route('/new')
+@app.route('/posts/<nickname>/new')
 @login_required
-def new():
+def new(nickname):
     feed = Post.query.filter_by(rebin='false').all()
     follower = '0 for now' #count for followers. will need to update the db model
     user = 'Stranger'
@@ -159,7 +228,6 @@ def new():
                             title="New Post",
                             user=user,
                             follower=follower)
-
 
 @app.route('/', methods=['GET'])
 @app.route('/discover', methods=['GET'])
@@ -188,7 +256,6 @@ def discover():
                             user=user,
                             follower=follower)
 
-
 @app.route('/login', methods=['GET', 'POST'])
 @auth.route('/login', methods=['GET', 'POST'])
 def login():
@@ -198,12 +265,15 @@ def login():
         user = User.query.filter_by(email=form.email.data).first()
         if user is not None and user.verify_password(form.password.data):
             login_user(user, form.remember_me.data)
+            if request.args.get('next') is url_for('auth.login'):
+                return redirect(url_for('discover'))
             return redirect(request.args.get('next') or url_for('discover'))
         flash('Invalid username or password.')
     return render_template('auth/login.html',
                                 title="Log In",
                                 form=form,
                                 user=user)
+
 @auth.route('/logout')
 def logout():
     try:
@@ -217,24 +287,23 @@ def logout():
 def signup():
     form = SignupForm()
     user = 'Stranger'
+    created_time = datetime.utcnow()
+    check_email = User.query.filter_by(email=form.email.data).first()
+    check_nickname = User.query.filter_by(nickname=form.nickname.data).first()
     if form.validate_on_submit():
-        user = User(nickname=form.nickname.data, email=form.email.data, password=form.password.data)
-        db.session.add(user)
-        db.session.commit()
-        login_user(user, form.remember_me.data)
-        return redirect(request.args.get('next') or url_for('discover'))
+        if not check_email and not check_nickname:
+            user = User(nickname=form.nickname.data, created=created_time, email=form.email.data, password=form.password.data)
+            db.session.add(user)
+            db.session.commit()
+            login_user(user, form.remember_me.data)
+            flash('Account created successfully!')
+            return redirect(request.args.get('next') or url_for('discover'))
+        flash('Username or password is already taken. If this is you please sign in.')
     return render_template('signup.html',
                                 title="Log In",
                                 form=form,
                                 user=user)
 
-'''@app.route('/js')
-def js():
-    return "/static/style/js"
-
-@app.route('/css')
-def css():
-    return "/static/style/css/"'''
 
 if __name__ == '__main__':
     app.run()
