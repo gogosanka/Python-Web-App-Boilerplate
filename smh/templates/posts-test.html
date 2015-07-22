@@ -13,9 +13,13 @@
             {% if post %}
               <ul>
               {% for post in post %}
-              {% if post.rebin == 'false' %}
-              <li><a href="/show/{{ post.id }}">{{ post.title }}</a> <a href="/edit/{{ post.id }}" class="glyphicon glyphicon-pencil"></a> <a href="/recycle/{{ post.id }}" class="glyphicon glyphicon-trash"></a></li>
-              {% endif %}
+{% if post.rebin == 'false' %}
+<li>{{ post.title }} | <a href="/edit/{{ post.id }}">edit</a> | <a href="/recycle/{{ post.id }}" class="glyphicon glyphicon-eye-open"></a></li>
+{% else %}
+{% if post.rebin == 'true' %}
+<li>{{ post.title }} | <a href="/edit/{{ post.id }}">edit</a> | <a href="/recycle/{{ post.id }}" class="glyphicon glyphicon-eye-close"></a></li>
+{% endif %}
+{% endif %}
               {%endfor %}
               </ul>
               {% endif %}
@@ -25,3 +29,6 @@
 </body>
 
 
+<!-- {% if post.rebin == 'false' %}
+              <li><a href="/show/{{ post.id }}">{{ post.title }}</a> <a href="/edit/{{ post.id }}" class="glyphicon glyphicon-pencil"></a> <a href="/recycle/{{ post.id }}" class="glyphicon glyphicon-trash"></a></li>
+              {% endif %} -->

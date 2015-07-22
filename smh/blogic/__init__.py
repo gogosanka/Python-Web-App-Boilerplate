@@ -1,6 +1,7 @@
 from smh import db
 from smh.models.models import *
 from flask import session, redirect, url_for
+import datetime
 
 default_titles = ['Lily', 'Jeanna', 'Angelika', 'Ronald', 'Brandie', 'Doreatha', 'Leann', 'Vivienne', 'Sabina', 'Elois', 'Bernita', 'Londa', 'Rosa',
 'Alba', 'Blanche', 'Doug', 'Mana', 'Sherrill', 'Masako', 'Rod', 'Herb', 'Myriam', 'Ciara', 'Katy', 'Kisha', 'Kym', 'Xochitl', 'Flo',
@@ -31,8 +32,9 @@ def recycle(post):
 
 def new(post,author,title="Untitled"):
     '''create a new post.'''
+    time = datetime.datetime.utcnow()
     user = User.query.filter_by(nickname=author).first()
-    entry = Post(body=post, author=user, title=title, rebin='false')
+    entry = Post(body=post, author=user, title=title, timestamp=time, rebin='false')
     db.session.add(entry)
     db.session.commit()
 

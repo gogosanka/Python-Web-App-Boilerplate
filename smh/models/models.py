@@ -2,6 +2,7 @@ from smh import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask.ext.login import UserMixin
 from smh import lm
+from hashlib import md5
 
 @lm.user_loader
 def load_user(user_id):
@@ -17,6 +18,11 @@ def load_user(user_id):
 followers = db.Table('followers',
     db.Column('follower_id', db.Integer, db.ForeignKey('user.id')),
     db.Column('followed_id', db.Integer, db.ForeignKey('user.id'))
+)
+
+vibes = db.Table('vibes',
+    db.Column('vibe_id', db.Integer, db.ForeignKey('vibe.id')),
+    db.Column('vibing_id', db.Integer, db.ForeignKey('user.id'))
 )
 
 tags = db.Table('tags',
@@ -68,14 +74,30 @@ class User(db.Model, UserMixin):
             return self
     def is_following(self, user):
         return self.followed.filter(followers.c.followed_id == user.id).count() > 0
+    def avatar(self, size):
+        return 'http://www.gravatar.com/avatar/%s?d=mm&s=%d' % (md5(self.email.encode('utf-8')).hexdigest(), size)
 
+#Vibe Vibes are the easiest way for people to get in touch to do something in particular. 
+class Vibe(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    vibe_img = db.Column(db.LargeBinary)
+    vibe_txt = db.Column(db.String(77))
+    timestamp = db.Column(db.DateTime)
+    vibe_seen = False
+    #vibing_id is the user_id
+    vibing = db.relationship('Vibe',
+                            secondary=vibes,
+                            primaryjoin=(vibes.c.vibe_id == id),
+                            secondaryjoin=(vibes.c.vibing_id == id),
+                            backref=db.backref('vibers', lazy='dynamic'),
+                            lazy='dynamic')
+    
 class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     image = db.Column(db.LargeBinary)
     timestamp = db.Column(db.DateTime)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     post_id = db.Column(db.String(500), db.ForeignKey('post.id'))
-
 
 class Tag(db.Model):
     id = db.Column(db.Integer, primary_key=True)

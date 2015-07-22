@@ -49,9 +49,9 @@ body {
                 <li><a href="{{ url_for('profile', nickname=current_user.nickname) }}">Dashboard</a></li>
                 <li><a href="{{ url_for('posts', nickname=current_user.nickname) }}">Posts</a></li>
                 <li><a href="{{ url_for('new', nickname=current_user.nickname) }}">Create</a></li>
-                <li><a href="{{ url_for('auth.logout') }}">Sign Out</a></li>
+                <li><a href="{{ url_for('auth.logout') }}">Log Out</a></li>
                 {% else %}
-                <li><a href="{{ url_for('auth.login') }}">Sign In</a></li>
+                <li><a href="{{ url_for('auth.login') }}">Log In</a></li>
                 <li><a href="{{ url_for('signup') }}">Sign Up</a></li>
                 {% endif %}              
             </ul>
@@ -64,45 +64,32 @@ body {
 {% if current_user.is_authenticated() %}
     <div class="container">
       <div class="row">
-        <div class="col-md-12">
+        <div class="col-md-8">
           {% if album %}<legend>{{ album.title }} by {{ album.author }}</legend>{% endif %}         
                <!-- content feed -->
                   {% for feed in feed %}
-                            <div class="col-md-6">
-                              <div class="panel panel-default">
-                                <div class="panel-heading"><h3><a href="/show/{{ feed.id }}">{{ feed.title }}</a>
-                                <a href="#" class="glyphicon glyphicon-plus"></a><a href="#" class="glyphicon glyphicon-heart"></a></h3></div>
-                                <div class="panel-body">{{ feed.author.nickname }}</div>
-                                <div class="panel-body">{{ feed.body }}</div>
-                              </div>
-                            </div>
-                  {% endfor %}
-                </div>
-                </div>
-              </div>
-    {% else %}
-<div class="container">
-      <div class="row">
-        <div class="col-md-12">
-          {% if album %}<legend>{{ album.title }} by {{ album.author }}</legend>{% endif %}         
-               <!-- content feed -->
-                  {% for feed in feed %}
-                            <div class="col-md-6">
-                              <div class="panel panel-default">
-                                <div class="panel-heading"><h3>{{ feed.author }}</h3></div>
-                                <div class="panel-body">{{ feed.body }}</div>
-                              </div>
-                            </div>
-                  {% endfor %}
-                </div>
-                {% endif %}
 
-        </div>
-        
-                  </div>
+<table>
+      <tr valign="top">
+          <td><a href="/profile/{{ feed.author.nickname }}"><img src="{{ feed.author.avatar(50) }}"></a></td><td><i>{{ feed.author.nickname }} added:</i><br><a href="/show/{{ feed.id }}">{{ feed.title }}</a></td>
+      </tr>
+  </table>
+                  {% endfor %}
+                  <!-- end content feed -->
+                  {% else %}
+                  <!-- content feed -->
+                  {% for feed in feed %}
+<table>
+      <tr valign="top">
+          <td><img src="{{ feed.author.avatar(50) }}"></td><td><i>{{ feed.author.nickname }} added:</i><br>{{ feed.title }}</td>
+      </tr>
+  </table>
+                  {% endfor %}
+                  <!-- end content feed -->
+                </div>
                 </div>
               </div>
-            
+    {% endif %}
             </body>
 
 <!-- endblock for block body -->
