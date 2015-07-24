@@ -1,36 +1,64 @@
-<!DOCTYPE html>
-<html>
 {% extends "base-dashboard.html" %}
-<head>
-</head>
+
 <body>
-{% block content %}
-{% with messages = get_flashed_messages() %}
-{% endwith %}
-{% if user.nickname == current_user.nickname %}
-<h1>My Profile</h1>
-{% else %}
-<h1>{{ user.nickname }}'s Profile</h1>
-{% endif %}
-<div class="row">
-          <div class="col-md-12">
-            {% if post %}
-              {% for post in post %}
-              {% if post.rebin == 'false' %}
-                            <div class="col-md-6">
-                              <div class="panel panel-default">
-                                <div class="panel-heading"><h3><a href="/show/{{ post.id }}">{{ post.title }}</a>
-                                <a href="#" class="glyphicon glyphicon-plus"></a><a href="#" class="glyphicon glyphicon-heart"></a></h3></div>
-                                <div class="panel-body">{{ post.author.nickname }}</div>
-                                <div class="panel-body">{{ post.body }}</div>
-                              </div>
-                            </div>
-                  {% endif %}
-                  {% endfor %}
-                  {% endif  %}
-          </div>
-</div>
-{% endblock %}
+  {% block content %}
+    {% with messages = get_flashed_messages() %} {% endwith %}
+    {% if user.nickname == current_user.nickname %}<h1>My Profile</h1>
+    {% else %}<h1>{{ user.nickname }}'s Profile</h1>
+    {% endif %}
+    <div class="row">
+      <div class="col-md-2">
+        <!-- make sure logged in user information loads -->
+        {% if current_user and user.nickname == current_user.nickname %}
+        <table class="table table-hover">
+          <tr><th>Followers</th></tr>
+            {% for follower in current_user.followed %}
+              {% if follower != current_user %}
+                <tr><td><a href="/{{ follower }}">{{ follower }}</a></td></tr>
+              {% endif %}
+            {%endfor%}
+        </table>
+      </div>
+      <div class="col-md-4">
+        <table class="table table-hover">
+          <tr>
+            <th>Vibes</th>
+            <th>Links</th>
+          </tr>
+          {% if post %}
+            {% for post in post %}
+              {% if post.rebin == 'false' and post.public == 'true' %}
+                <tr>
+                  <td><a href="/show/{{ post.id }}">{{ post.title }}</a></td>
+                  <td>
+                    <a href="#" class="glyphicon glyphicon-plus"></a>
+                    <a href="/edit/{{ post.id }}" class="glyphicon glyphicon-pencil"></a>
+                    
+                    {% if post.public == 'true' %}<a href="/visible/{{ post.id }}" class="glyphicon glyphicon-eye-open"></a>
+                    {% elif post.public == 'false' %}<a href="/visible/{{ post.id }}" class="glyphicon glyphicon-eye-close"></a>{% endif %}
+                    
+                    {% if post.rebin == 'false' %}<a href="/recycle/{{ post.id }}" class="glyphicon glyphicon-trash"></a></td></tr>{% endif %}
+
+              {% elif post.rebin == 'false' and post.public == 'false' %}
+                <tr>
+                  <td><a href="/show/{{ post.id }}">{{ post.title }}</a></td>
+                  <td>
+                    <a href="#" class="glyphicon glyphicon-plus"></a>
+                    <a href="/edit/{{ post.id }}" class="glyphicon glyphicon-pencil"></a>
+                    
+                    {% if post.public == 'true' %}<a href="/visible/{{ post.id }}" class="glyphicon glyphicon-eye-open"></a>
+                    {% elif post.public == 'false' %}<a href="/visible/{{ post.id }}" class="glyphicon glyphicon-eye-close"></a>{% endif %}
+                    
+                    {% if post.rebin == 'false' %}<a href="/recycle/{{ post.id }}" class="glyphicon glyphicon-trash"></a></td></tr>{% endif %}
+
+              {% endif %}
+            {% endfor %}
+          {% endif  %}
+        </table>
+      </div>
+    </div>              
+        {% endif %}
+  {% endblock %}
 </body>
 
 

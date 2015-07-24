@@ -10,8 +10,8 @@ from smh.auth import *
 @login_required
 def posts(nickname):
     feed = Post.query.filter_by(rebin='false').all()
-    follower = '0 for now' #count for followers. will need to update the db model
-    user = 'Stranger'
+    current = User.query.filter_by(id=current_user.id).first()
+    followers = current_user.followers
     if current_user.is_authenticated():
         user = User.query.filter_by(nickname=current_user.nickname).first()
         posts = Post.query.filter_by(author=user).all()
@@ -26,7 +26,7 @@ def posts(nickname):
                                 posts_count=posts_count,
                                 bin_posts=bin_posts,
                                 bin_count=bin_count,
-                                follower=follower,
+                                followers=followers,
                                 feed=feed)
     return redirect(url_for('auth.login'))
 
@@ -41,24 +41,40 @@ def posts(nickname):
 #boston's own interaction application, interapp...we'll see. even add the "home-for-dinner" interface for the gamers meetup module.
 #that's it. it's a moduler networking tool that has a few core apps from viewbook, LOA, and Bayfarm
 #also add an inbox feature that works across the main app
-@app.route('/profile/<nickname>', methods=['GET', 'POST'])
+@app.route('/admin/allusers', methods=['GET'])
+@login_required
+def allusers():
+    users = User.query.all()
+    return render_template('admin/allusers.html', users=users)
+
+@app.route('/<nickname>', methods=['GET', 'POST'])
+@login_required
 def profile(nickname):
     feed = Post.query.filter_by(rebin='false').all()
-    follower = '0 for now' #count for followers. will need to update the db model
     user = User.query.filter_by(nickname=nickname).first()
+    current = User.query.filter_by(id=current_user.id).first()
     if user:
-        posts = Post.query.filter_by(author=user).all()
-        posts_count = Post.query.filter_by(author=user, rebin='false').count()
-        bin_posts = Post.query.filter_by(author=user, rebin='true').all() #all recycled posts object        
-        bin_count = Post.query.filter_by(author=user, rebin='true').count() #recycled posts count
+            posts = Post.query.filter_by(author=user).all()
+            posts_count = Post.query.filter_by(author=user, rebin='false').count()
+            bin_posts = Post.query.filter_by(author=user, rebin='true').all() #all recycled posts object        
+            bin_count = Post.query.filter_by(author=user, rebin='true').count() #recycled posts count
+    if current_user.nickname == nickname:
         return render_template('profile.html',
+                                title="My Pages",
+                                user=current_user,
+                                post=posts,
+                                posts_count=posts_count,
+                                bin_posts=bin_posts,
+                                bin_count=bin_count,
+                                current=current)
+    return render_template('profile.html',
                                 title="My Pages",
                                 user=user,
                                 post=posts,
                                 posts_count=posts_count,
                                 bin_posts=bin_posts,
                                 bin_count=bin_count,
-                                follower=follower)
+                                current=current)
     return redirect(url_for('discover'))
 
 @app.route('/update', methods=['POST'])
@@ -77,9 +93,6 @@ def update_post():
 @app.route('/edit/<int:postid>/', methods=['GET'])
 @login_required
 def edit(postid):
-    feed = Post.query.filter_by(rebin='false').all()
-    follower = '0 for now' #count for followers. will need to update the db model
-    user = 'Stranger'
     if current_user.is_authenticated():
         user = User.query.filter_by(nickname=current_user.nickname).first()
         posts_count = Post.query.filter_by(author=user, rebin='false').count()
@@ -97,7 +110,7 @@ def edit(postid):
                                     bin_count=bin_count,
                                     follower=follower)
             else:
-                return redirect(url_for('posts'))
+                return redirect(url_for('posts', nickname=current_user.nickname))
         return render_template('404.html')
     else:
         return render_template('404.html')
@@ -144,10 +157,10 @@ def recycle(postid):
     if post:
         blogic.recycle(post)
         if post.rebin == 'true':
-            flash("Sent to recycling bin!")
-            return redirect(url_for('posts', nickname=current_user.nickname))
-        flash("Restored post successfully!")
-        return redirect(url_for('posts', nickname=current_user.nickname))
+            flash("Post was sent to recycling bin!")
+            return redirect(url_for('profile', nickname=current_user.nickname))
+        flash("Your post was restored!")
+        return redirect(url_for('bin', nickname=current_user.nickname))
     else:
         return render_template('404.html')
 
@@ -179,6 +192,20 @@ def bin(nickname=current_user):
                             user=user,
                             follower=follower)
 
+@app.route('/visible/<postid>/', methods=['GET'])
+@login_required
+def visible(postid):
+    post = Post.query.filter_by(id=postid).first()
+    if post:
+        if post.public == 'true':
+            post.hide()
+            flash("Vibe was hidden.")
+            return redirect(url_for('profile', nickname=current_user.nickname))
+        post.unhide()
+        flash("Now sharing vibe.")
+        return redirect(url_for('profile', nickname=current_user.nickname))
+    else:
+        return render_template('404.html')
 
 @app.route('/create', methods=['POST'])
 @login_required
@@ -232,7 +259,7 @@ def new(nickname):
 @app.route('/', methods=['GET'])
 @app.route('/discover', methods=['GET'])
 def discover():
-    feed = Post.query.filter_by(rebin='false').all()
+    feed = Post.query.filter_by(rebin='false', public='true').all()
     follower = '0 for now' #count for followers. will need to update the db model
     user = 'Stranger'
     if current_user.is_authenticated():
@@ -314,40 +341,47 @@ def signup():
 @app.route('/follow/<nickname>')
 @login_required
 def follow(nickname):
+    #user is the db object of the nickname argument
     user = User.query.filter_by(nickname=nickname).first()
+    #current is the db object of the current logged in user
+    current = User.query.filter_by(nickname=current_user.nickname).first()
     if user is None:
         flash('User %s not found.' % nickname)
-        return redirect(url_for('index'))
-    if user.nickname == current_user.nickname:
+        return redirect(url_for('discover'))
+    #check if the current logged in user is the same as the one we are trying to follow
+    if user.id == current_user.id:
         flash('You can\'t follow yourself!')
-        return redirect(url_for('user', nickname=nickname))
-    u = user.follow(user)
+        return redirect(url_for('profile', nickname=nickname))
+    #otherwise, let's follow the user!
+    u = current.follow(user)
     if u is None:
-        flash('Cannot follow ' + nickname + '.')
-        return redirect(url_for('user', nickname=nickname))
+        flash('Already following ' + nickname + '.')
+        return redirect(url_for('profile', nickname=nickname))
     db.session.add(u)
     db.session.commit()
     flash('You are now following ' + nickname + '!')
-    return redirect(url_for('user', nickname=nickname))
+    return redirect(url_for('profile', nickname=nickname))
 
 @app.route('/unfollow/<nickname>')
 @login_required
 def unfollow(nickname):
     user = User.query.filter_by(nickname=nickname).first()
+    #current is the db object of the current logged in user
+    current = User.query.filter_by(id=current_user.id).first()
     if user is None:
         flash('User %s not found.' % nickname)
         return redirect(url_for('discover'))
-    if user.nickname == current_user.nickname:
+    if user.id == current_user.id:
         flash('You can\'t unfollow yourself!')
-        return redirect(url_for('posts', nickname=nickname))
-    u = duser.unfollow(user)
+        return redirect(url_for('profile', nickname=nickname))
+    u = current.unfollow(user)
     if u is None:
-        flash('Cannot unfollow ' + nickname + '.')
-        return redirect(url_for('user', nickname=nickname))
+        flash('You are not following ' + nickname + '.')
+        return redirect(url_for('profile', nickname=nickname))
     db.session.add(u)
     db.session.commit()
     flash('You have stopped following ' + nickname + '.')
-    return redirect(url_for('user', nickname=nickname))
+    return redirect(url_for('profile', nickname=nickname))
 
 if __name__ == '__main__':
     app.run()

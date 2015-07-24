@@ -34,7 +34,7 @@ def new(post,author,title="Untitled"):
     '''create a new post.'''
     time = datetime.datetime.utcnow()
     user = User.query.filter_by(nickname=author).first()
-    entry = Post(body=post, author=user, title=title, timestamp=time, rebin='false')
+    entry = Post(body=post, author=user, title=title, timestamp=time, rebin='false', public='true')
     db.session.add(entry)
     db.session.commit()
 

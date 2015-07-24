@@ -8,12 +8,10 @@
   {% endif %}
 {% endblock %}
 
-
-
 {% block styles %}
 {{ super() }}
   <meta charset="utf-8">
-  <script type="text/javascript" src="{{ url_for('static', filename='style/js/jquery-2.1.4.min.js') }}"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='style/css/bootstrap.min.css') }}">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 {% endblock %}
@@ -21,28 +19,28 @@
 <!-- template code begins for all page divs -->
 {% block body %}
 <body background="{{ url_for('static', filename='img/bg1.jpg') }}">
+
 <!-- navigation bar goes here -->
 {% block navbar %}
-
 <style>
 body {
   padding-top: 80px;
 }
 </style>
+
 <div id="navigation-bar" class="navbar navbar-default navbar-fixed-top" role="navigation">
     <div class="container-fluid">
-        <div class="navbar-header"><a class="navbar-brand" href="/">smh</a>
+        <div class="navbar-header"><a class="navbar-brand" href="/">Discover</a>
             <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-menubuilder"><span class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
-            </button>
-{% with messages = get_flashed_messages() %}
-{% if messages %}
-<ul class=flashes>
-{% for message in messages %}
-{{ message }}
-{% endfor %}
-</ul>
-{% endif %}
-{% endwith %}
+            </button><div>              {% with messages = get_flashed_messages() %}
+              {% if messages %}
+              <ul class=flashes>
+              {% for message in messages %}
+              {{ message }}</p>
+              {% endfor %}
+              </ul>
+              {% endif %}
+              {% endwith %}</div>
         </div>
         <div class="collapse navbar-collapse navbar-menubuilder">
             <ul class="nav navbar-nav navbar-right">
@@ -60,16 +58,15 @@ body {
     </div>
 </div>
 {% endblock %}
-<body>
 
     <div class="container">
       <div class="row">
-        <div class="col-md-8">
+        <div class="col-md-9">
           {% if album %}<legend>{{ album.title }} by {{ album.author }}</legend>{% endif %}
           {% block content %}Default content until overwritten.{% endblock %}
         </div>
         <!-- this is the QUIKDASH section -->
-        <div class="col-md-4"> 
+        <div class="col-md-3"> 
             <!-- begin right side bar code -->
           <div class="col-md-3 sidebar-nav-fixed affix">
             <div class="panel panel-default">
@@ -78,41 +75,83 @@ body {
 
 <!-- QUIKDASH DATA LOADING -->
           <!-- Load user data of logged in user if in self profile -->
-          {% if user and user.nickname == current_user.nickname %}
+          {% if user and user.id == current_user.id %}
             <!-- Check if a cover photo is available for logged in user -->
             {% if cover %}<img src="{{ cover.default }}" class="img-responsive"></div>
             {% else %}<img src="http://orig11.deviantart.net/8d3a/f/2010/056/c/5/moon_dance_by_cybrea_stock.jpg" class="img-responsive"></div>
             {% endif %}
             <!-- end cover -->
-            <!-- complete QUIKDASH details -->
+            <!-- begin SIGNED IN USER QUIKDASH details -->
+            {{ user.nickname }}
+            <div class="row">
+
+            <div class="col-md-6">
             <div class="panel-body">
-            <p class="lead">{{ user.nickname }}</p>
-            <div class="container-fluid">
-              <div class="row">
+              <ul class="list-group">
+                <li class="list-group-item">
+                  <span class="badge">{{ posts_count }}</span>
+                  Vibes&nbsp;
+                </li>
+                <li class="list-group-item"><!-- this is the count for tribes, aka "user lists" that can be set to send information -->
+                  <span class="badge">0</span>
+                  Tribes
+                </li>
+                <li class="list-group-item">
+                  <span class="badge">{{ user.followed.count()-1 }}</span>
+                  Subscribes
+                </li>
+              </ul></div></div>
                 <div class="col-md-6">
-                  <img src="{{ user.avatar(128) }}">
-                </div>
-                <div class="col-md-6">
-                  <p>{{ follower }} Followers, {{ posts_count }} Posts</p>
-                </div>
-              </div>
-            </div>
-            
-            <p><a href="{{ url_for('bin', nickname=current_user.nickname) }}" class="glyphicon glyphicon-trash">{{ bin_count }}</a></p>
+                <div class="panel-body">
+                  <img src="{{ user.avatar(125) }}">
+                  <p><a href="{{ url_for('bin', nickname=current_user.nickname) }}" class="glyphicon glyphicon-trash">{{ bin_count }}</a></p>
+                </div></div>
             <!-- end QUIKDASH details -->
           <!-- End loading user data if logged in -->
+
           {% else %}
+
             <!-- Load user data if browsing other profiles or browsing anonymously -->
-            {% if user and user.nickname != current_user.nickname %}
+            {% if user and user.id != current_user.id %}
               <!-- Check if a cover photo is available for logged in user -->
               {% if cover %}<img src="{{ cover.default }}" class="img-responsive"></div>
               {% else %}<img src="http://www.eatingbirdfood.com/wp-content/uploads/2010/07/lulugrooveshort.jpg" class="img-responsive"></div>
               {% endif %}
               <!-- end cover -->
-              <!-- complete QUIKDASH details -->
-              <div class="panel-body">
-              <p class="lead">{{ user.nickname }}</p>
-              <p>{{ follower }} Followers, {{ posts_count }} Posts</p>
+              <!-- begin OTHER USER PROFILE QUIKDASH details -->
+            <!-- begin SIGNED IN USER QUIKDASH details -->
+            {{ user.nickname }}
+            <div class="row">
+
+            <div class="col-md-6">
+            <div class="panel-body">
+              <ul class="list-group">
+                <li class="list-group-item">
+                  <span class="badge">{{ posts_count }}</span>
+                  Vibes&nbsp;
+                </li>
+                <li class="list-group-item"><!-- this is the count for tribes, aka "user lists" that can be set to send information -->
+                  <span class="badge">0</span>
+                  Tribes
+                </li>
+                <li class="list-group-item">
+                {% if current_user.id == user.id %}
+                  <span class="badge">{{ current_user.followers.count()-1 }}</span>
+                  Subscribes
+                  {% elif current_user.id != user.id %}
+                  <span class="badge">{{  user.followers.count()-1 }}</span>
+                  Subscribes
+                  {% endif %}
+                </li>
+              </ul></div></div>
+                <div class="col-md-6">
+                <div class="panel-body">
+                  <img src="{{ user.avatar(125) }}">
+                  <p><a href="{{ url_for('bin', nickname=current_user.nickname) }}" class="glyphicon glyphicon-trash">{{ bin_count }}</a></p>
+                
+                 {% if current.is_following(user) %}<i><a href="/unfollow/{{ user.nickname }}">unfollow</a></i></p>
+                {% else %}<i><a href="/follow/{{ user.nickname }}">follow</a></i></p>
+                {% endif %}</div></div>
               <!-- end QUIKDASH details -->
               <!-- End loading user data if non-self profiles -->
           {% else %}
@@ -120,14 +159,16 @@ body {
               {% else %}<img src="http://www.bootply.com/assets/example/bg_5.jpg" class="img-responsive"></div>
               {% endif %}
               <!-- end cover -->
-              <!-- complete QUIKDASH details -->
+              <!-- begin STRANGER QUIKDASH details -->
               <div class="panel-body">
               <p class="lead">Hello Stranger, please sign up!</p>
               </div></div></div>
               <!-- end QUIKDASH details -->
               <!-- End loading user data if non-self profiles -->            
           {% endif %}{% endif %}  
-<!-- End loading data QUIKDASH -->            
+<!-- End loading data QUIKDASH -->  
+
+   
             </body>
 
 <!-- endblock for block body -->

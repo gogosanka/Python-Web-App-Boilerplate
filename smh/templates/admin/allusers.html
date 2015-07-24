@@ -1,0 +1,9 @@
+{% block content %}
+{% for user in users %}
+{% if user == current_user %}
+<h1>{{ user }} is currently logged in</h1>
+{% else %}
+<p>{{ user }}</p>
+{% endif %}
+{% endfor %}
+{% endblock %}

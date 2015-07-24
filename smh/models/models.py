@@ -120,7 +120,7 @@ class Cover(db.Model):
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     rebin = db.Column(db.String(5))
-    hidden = db.Column(db.String(5))
+    public = db.Column(db.String(8))
     body = db.Column(db.String(500))
     title = db.Column(db.String(32))
     timestamp = db.Column(db.DateTime)
@@ -129,6 +129,12 @@ class Post(db.Model):
     tags = db.relationship('Tag', secondary = tags, backref=db.backref('posts', lazy='dynamic'))
     image = db.relationship('Image', backref='post', lazy='dynamic')
     rating = db.Column(db.Boolean)
+    def hide(self):
+        self.public = 'false'
+        db.session.commit()
+    def unhide(self):
+        self.public = 'true'
+        db.session.commit()
     def __repr__(self):
         repre = "%r" % self.body
         return str(repre)
