@@ -71,7 +71,7 @@ body {
 
 <table>
       <tr valign="top">
-          <td><a href="discover/profile/{{ feed.author.nickname }}"><img src="{{ feed.author.avatar(50) }}"></a></td><td><i>{{ feed.author.nickname }} added:</i><br><a href="/show/{{ feed.id }}">{{ feed.title }}</a></td>
+          <td><a href="/{{ feed.author.nickname }}"><img src="{{ feed.author.avatar(50) }}"></a></td><td><i>{{ feed.author.nickname }} added:</i><br><a href="/show/{{ feed.id }}">{{ feed.title }}</a></td>
       </tr>
   </table>
                   {% endfor %}

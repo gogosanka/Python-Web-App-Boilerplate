@@ -1,8 +1,0 @@
-<!DOCTYPE html>
-<head>
-{% extends "base.html" %}
-{% block content %}
-{{ body }}
-test page
-</form>
-{% endblock %}

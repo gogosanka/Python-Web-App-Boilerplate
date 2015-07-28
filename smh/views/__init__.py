@@ -1,10 +1,12 @@
-from flask import render_template, flash, redirect, session, url_for, request, abort
+from flask import render_template, flash, redirect, session, url_for, request, abort, send_from_directory
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from smh import app, db, lm, blogic
-from smh.forms import LoginForm, NameForm, SignupForm
+from smh.forms import LoginForm, NameForm, SignupForm, VibeMe, VibeBroadcast
 from smh.models.models import User, Post
-from datetime import datetime
+from datetime import datetime   
 from smh.auth import *
+from werkzeug import secure_filename
+import os
 
 @app.route('/posts/<nickname>', methods=['GET', 'POST'])
 @login_required
@@ -47,6 +49,7 @@ def allusers():
     users = User.query.all()
     return render_template('admin/allusers.html', users=users)
 
+#user dashboard/profile
 @app.route('/<nickname>', methods=['GET', 'POST'])
 @login_required
 def profile(nickname):
@@ -54,20 +57,11 @@ def profile(nickname):
     user = User.query.filter_by(nickname=nickname).first()
     current = User.query.filter_by(id=current_user.id).first()
     if user:
-            posts = Post.query.filter_by(author=user).all()
-            posts_count = Post.query.filter_by(author=user, rebin='false').count()
-            bin_posts = Post.query.filter_by(author=user, rebin='true').all() #all recycled posts object        
-            bin_count = Post.query.filter_by(author=user, rebin='true').count() #recycled posts count
-    if current_user.nickname == nickname:
+        posts = Post.query.filter_by(author=user).all()
+        posts_count = Post.query.filter_by(author=user, rebin='false').count()
+        bin_posts = Post.query.filter_by(author=user, rebin='true').all() #all recycled posts object        
+        bin_count = Post.query.filter_by(author=user, rebin='true').count() #recycled posts count
         return render_template('profile.html',
-                                title="My Pages",
-                                user=current_user,
-                                post=posts,
-                                posts_count=posts_count,
-                                bin_posts=bin_posts,
-                                bin_count=bin_count,
-                                current=current)
-    return render_template('profile.html',
                                 title="My Pages",
                                 user=user,
                                 post=posts,
@@ -222,6 +216,23 @@ def create():
     else:
         return render_template('404.html')
 
+#ignore this route until you're done testing vibe creation with db
+@app.route('/create_vibe', methods=['POST'])
+@login_required
+def create_vibe():
+    user = User.query.filter_by(nickname=current_user.nickname).first()
+    post = request.form['body']
+    author = request.form['author']
+    title = request.form['title']
+    if post:
+        if author:
+            blogic.new(post,author,title)
+            flash("created post successfully!")
+            return redirect(url_for('posts', nickname=current_user.nickname))
+    else:
+        return render_template('404.html')
+
+
 @app.route('/nopage')
 def no_page():
     return render_template('404.html')
@@ -256,6 +267,45 @@ def new(nickname):
                             user=user,
                             follower=follower)
 
+#send a vibe to a follower of your choosing
+@app.route('/vibewith')
+@login_required
+def vibebroadcast():
+    form = VibeBroadcast()
+    if current_user.is_authenticated():
+        user = User.query.all()
+        #hidden_posts = Post.query.filter_by(author=user, rebin='false', hidden='true').all() #make sure to change blogic so that when hidden items are deleted their status goes back to visible
+        return render_template('create-vibe.html', form=form)
+    return render_template('posts.html',
+                            title="New Post",
+                            user=user,
+                            follower=follower)
+
+@app.route('/vms')
+@app.route('/<nickname>/vms')
+@login_required
+def myvibes(nickname):
+    vibes = current_user.vibes
+    if current_user.is_authenticated():
+        user = User.query.all()
+        #hidden_posts = Post.query.filter_by(author=user, rebin='false', hidden='true').all() #make sure to change blogic so that when hidden items are deleted their status goes back to visible
+        return render_template('create-vibe.html', form=form)
+    return redirect(url_for('discover'))
+
+#send a vibe directly to someone via their profile
+@app.route('/vibewith/<nickname>')
+@app.route('/vm/<nickname>')
+@app.route('/vm<nickname>')
+@login_required
+def vibeme(nickname):
+    form = VibeMe()
+    form.recipient.data = nickname
+    if current_user.is_authenticated():
+        user = User.query.all()
+        #hidden_posts = Post.query.filter_by(author=user, rebin='false', hidden='true').all() #make sure to change blogic so that when hidden items are deleted their status goes back to visible
+        return render_template('create-vibe.html', form=form)
+    return redirect(url_for('discover'))
+
 @app.route('/', methods=['GET'])
 @app.route('/discover', methods=['GET'])
 def discover():
@@ -289,7 +339,7 @@ def login():
     form = LoginForm()
     user = 'Stranger'
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
+        user = User.query.filter_by(nickname=form.nickname.data).first()
         if user is not None and user.verify_password(form.password.data):
             login_user(user, form.remember_me.data)
             if request.args.get('next') is url_for('auth.login'):
@@ -382,6 +432,46 @@ def unfollow(nickname):
     db.session.commit()
     flash('You have stopped following ' + nickname + '.')
     return redirect(url_for('profile', nickname=nickname))
+
+'''@app.route('/uploads/<filename>')
+def uploaded_file(filename):
+    return render_template('uploads.html', filename=filename)'''
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1] in app.config['ALLOWED_EXTENSIONS']
+
+@app.route('/upload', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        file = request.files['file']
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            user_folder = ('/'  + current_user.nickname)
+            path = app.config['UPLOAD_FOLDER']
+            new_path = path + user_folder
+            if not os.path.exists(new_path):
+                os.makedirs(new_path)
+            if not os.path.exists(os.path.join(new_path, filename)):
+                file.save(os.path.join(new_path, filename))
+            elif os.path.exists(os.path.join(new_path, filename)):
+                flash('Filename already exists')
+            return redirect(url_for('uploaded_file', filename=filename))
+    return '''
+    <!doctype html>
+    <title>Upload new File</title>
+    <h1>Upload new File</h1>
+    <form action="/upload" method=post enctype=multipart/form-data>
+      <p><input type=file name=file>
+         <input type=submit value=Upload>
+    </form>
+    '''
+
+@app.route('/uploaded/<filename>')
+def upped(filename):
+    path = app.config['UPLOAD_FOLDER']
+    new_path = (path + '/' + current_user.nickname + '/')
+    return new_path + filename
 
 if __name__ == '__main__':
     app.run()

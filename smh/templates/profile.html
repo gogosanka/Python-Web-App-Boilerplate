@@ -12,6 +12,17 @@
         {% if current_user and user.nickname == current_user.nickname %}
         <table class="table table-hover">
           <tr><th>Followers</th></tr>
+            {% for follower in current_user.followers %}
+              {% if follower != current_user %}
+                <tr><td><a href="/{{ follower }}">{{ follower }}</a></td></tr>
+              {% endif %}
+            {%endfor%}
+        </table>
+      </div>
+      <div class="col-md-2">
+        <!-- make sure logged in user information loads -->
+        <table class="table table-hover">
+          <tr><th>Who I'm Following</th></tr>
             {% for follower in current_user.followed %}
               {% if follower != current_user %}
                 <tr><td><a href="/{{ follower }}">{{ follower }}</a></td></tr>

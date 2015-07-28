@@ -22,7 +22,7 @@ followers = db.Table('followers',
 
 vibes = db.Table('vibes',
     db.Column('vibe_id', db.Integer, db.ForeignKey('vibe.id')),
-    db.Column('vibing_id', db.Integer, db.ForeignKey('user.id'))
+    db.Column('vibing_id', db.Integer, db.ForeignKey('vibe.id'))
 )
 
 tags = db.Table('tags',
@@ -38,6 +38,7 @@ class User(db.Model, UserMixin):
     post = db.relationship('Post', backref='author', lazy='dynamic')
     album = db.relationship('Album', backref='author', lazy='dynamic')
     images = db.relationship('Image', backref='author', lazy='dynamic')
+    cover = db.relationship('Cover', backref='author', lazy='dynamic')
     created = db.Column(db.DateTime)
     about_me =db.Column(db.String(140))
     last_seen = db.Column(db.DateTime)
@@ -47,6 +48,7 @@ class User(db.Model, UserMixin):
                                 secondaryjoin=(followers.c.followed_id == id),
                                 backref=db.backref('followers', lazy='dynamic'),
                                 lazy='dynamic')
+    
     def followed_posts(self):
         return Post.query.join(followers, (followers.c.followed_id == Post.user_id)).filter(followers.c.follower_id == self.id).order_by(Post.timestamp.desc()) #read this thoroughly to understand it
     password_hash = db.Column(db.String(128))
@@ -64,34 +66,62 @@ class User(db.Model, UserMixin):
         return (self.id)
     def __repr__(self):
         return (self.nickname)
+    #handle following a user
     def follow(self, user):
         if not self.is_following(user):
             self.followed.append(user)
             return self
+    #handle unfollowing a user
     def unfollow(self, user):
         if self.is_following(user):
             self.followed.remove(user)
             return self
+    #handle checking if a user is being followed
     def is_following(self, user):
         return self.followed.filter(followers.c.followed_id == user.id).count() > 0
+    #handle if a vibe is to be followed
+    def follow_vibe(self, id):
+        if not self.is_following_vibe(id):
+            Vibe.vibing.append(id)
+            return self
+    def unfollow_vibe(self, id):
+        if self.is_following_vibe(id):
+            Vibe.vibing.remove(id)
+            return self
+    def is_following_vibe(self, vibe):
+        return Vibe.vibing.filter(vibes.c.vibing_id == vibe.id).count() > 0
     def avatar(self, size):
         return 'http://www.gravatar.com/avatar/%s?d=mm&s=%d' % (md5(self.email.encode('utf-8')).hexdigest(), size)
 
-#Vibe Vibes are the easiest way for people to get in touch to do something in particular. 
+#Vibe Vibes are the easiest way for people to get in touch to do something in particular.
+#user vibes are vibes that follow a user
+#user vibing are vibes that the user follows
 class Vibe(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    vibe_img = db.Column(db.LargeBinary)
-    vibe_txt = db.Column(db.String(77))
+    image = db.Column(db.LargeBinary)
+    message = db.Column(db.String(77))
     timestamp = db.Column(db.DateTime)
-    vibe_seen = False
-    #vibing_id is the user_id
-    vibing = db.relationship('Vibe',
+    vibe_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    followed = db.relationship('User',
                             secondary=vibes,
-                            primaryjoin=(vibes.c.vibe_id == id),
+                            primaryjoin=(vibes.c.vibe_id == user.id),
                             secondaryjoin=(vibes.c.vibing_id == id),
-                            backref=db.backref('vibers', lazy='dynamic'),
+                            backref=db.backref('vibes', lazy='dynamic'),
                             lazy='dynamic')
-    
+    def follow_user(self, user):
+        if not self.is_following(user):
+            self.followed.append(user)
+            return self
+    def unfollow_user(self, user):
+        if self.is_following_user(user):
+            Vibe.vibing.remove(id)
+            return self
+    def is_following_vibe(self, vibe):
+        return self.vibing.filter(vibes.c.vibing_id == vibe.id).count() > 0
+    seen = False
+    def __repr__(self):
+        return (self.message)
+
 class Image(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     image = db.Column(db.LargeBinary)
@@ -113,9 +143,8 @@ class Album(db.Model):
 
 class Cover(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    cover = db.Column(db.LargeBinary)
+    cover = db.Column(db.LargeBinary, index=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    main = db.Column(db.Integer)
 
 class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)

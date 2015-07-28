@@ -77,7 +77,7 @@ body {
           <!-- Load user data of logged in user if in self profile -->
           {% if user and user.id == current_user.id %}
             <!-- Check if a cover photo is available for logged in user -->
-            {% if cover %}<img src="{{ cover.default }}" class="img-responsive"></div>
+            {% if cover %}<img src="{{ current_user.cover }}" class="img-responsive"></div>
             {% else %}<img src="http://orig11.deviantart.net/8d3a/f/2010/056/c/5/moon_dance_by_cybrea_stock.jpg" class="img-responsive"></div>
             {% endif %}
             <!-- end cover -->
@@ -97,8 +97,8 @@ body {
                   Tribes
                 </li>
                 <li class="list-group-item">
-                  <span class="badge">{{ user.followed.count()-1 }}</span>
-                  Subscribes
+                  <span class="badge">{{ user.followers.count()-1 }}</span>
+                  Followers
                 </li>
               </ul></div></div>
                 <div class="col-md-6">
@@ -135,12 +135,9 @@ body {
                   Tribes
                 </li>
                 <li class="list-group-item">
-                {% if current_user.id == user.id %}
-                  <span class="badge">{{ current_user.followers.count()-1 }}</span>
-                  Subscribes
-                  {% elif current_user.id != user.id %}
-                  <span class="badge">{{  user.followers.count()-1 }}</span>
-                  Subscribes
+                {% if current_user.id != user.id %}
+                  <span class="badge">{{ user.followers.count()-1 }}</span>
+                  Subscribesz
                   {% endif %}
                 </li>
               </ul></div></div>
