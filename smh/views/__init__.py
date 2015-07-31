@@ -1,8 +1,8 @@
 from flask import render_template, flash, redirect, session, url_for, request, abort
 from flask.ext.login import login_user, logout_user, current_user, login_required
 from smh import app, db, lm, blogic
-from smh.forms import LoginForm, NameForm, SignupForm
-from smh.models.models import User, Post
+from smh.forms import LoginForm, NameForm, SignupForm, VibeMeForm
+from smh.models.models import User, Post, Vibe
 from datetime import datetime
 from smh.auth import *
 
@@ -11,21 +11,15 @@ from smh.auth import *
 def posts(nickname):
     feed = Post.query.filter_by(rebin='false').all()
     current = User.query.filter_by(id=current_user.id).first()
-    followers = current_user.followers
+    followers = current_user.followers.all()
     if current_user.is_authenticated():
         user = User.query.filter_by(nickname=current_user.nickname).first()
-        posts = Post.query.filter_by(author=user).all()
+        posts = Post.query.filter_by(author=user, rebin='false').all()
         posts_count = Post.query.filter_by(author=user, rebin='false').count()
-        bin_posts = Post.query.filter_by(author=user, rebin='true').all() #all recycled posts object        
-        bin_count = Post.query.filter_by(author=user, rebin='true').count() #recycled posts count
-        #hidden_posts = Post.query.filter_by(author=user, rebin='false', hidden='true').all() #make sure to change blogic so that when hidden items are deleted their status goes back to visible
         return render_template('posts-test.html',
                                 title="My Pages",
                                 user=user,
                                 post=posts,
-                                posts_count=posts_count,
-                                bin_posts=bin_posts,
-                                bin_count=bin_count,
                                 followers=followers,
                                 feed=feed)
     return redirect(url_for('auth.login'))
@@ -47,34 +41,48 @@ def allusers():
     users = User.query.all()
     return render_template('admin/allusers.html', users=users)
 
+@app.route('/vibewith<nickname>', methods=['POST', 'GET'])
+@login_required
+def vibewith(nickname):
+    form = VibeMeForm()
+    form.recipient.data = nickname
+    nickname = User.query.filter_by(nickname=nickname).first()
+    if current_user.id == nickname.id:
+        return redirect(url_for('discover'))
+    elif current_user.id != nickname.id:
+        if request.method == 'POST':
+            if form.validate_on_submit:
+                sender = User.query.filter_by(nickname=current_user.nickname).first()
+                vibe = Vibe(message=form.message.data)
+                recipient = User.query.filter_by(nickname=form.recipient.data).first()
+                blogic.send_vibe(current_user, vibe, recipient)
+                flash('Vibe sent successfully!')
+                return redirect(url_for('profile', nickname=nickname))
+        return render_template('smh/vibeform.html', nickname=nickname, form=form)    
+    return render_template('smh/vibeform.html', nickname=nickname, form=form)    
+
 @app.route('/<nickname>', methods=['GET', 'POST'])
 @login_required
 def profile(nickname):
     feed = Post.query.filter_by(rebin='false').all()
     user = User.query.filter_by(nickname=nickname).first()
-    current = User.query.filter_by(id=current_user.id).first()
     if user:
-            posts = Post.query.filter_by(author=user).all()
-            posts_count = Post.query.filter_by(author=user, rebin='false').count()
-            bin_posts = Post.query.filter_by(author=user, rebin='true').all() #all recycled posts object        
-            bin_count = Post.query.filter_by(author=user, rebin='true').count() #recycled posts count
-    if current_user.nickname == nickname:
+        if current_user.nickname == nickname:
+            user = User.query.filter_by(nickname=current_user.nickname).first()
+        bin_posts = Post.query.filter_by(author=user, rebin='true').all() #all recycled posts object        
+        bin_count = Post.query.filter_by(author=user, rebin='true').count() #recycled posts count
+        posts = Post.query.filter_by(author=user).all()
+        posts_count = Post.query.filter_by(author=user, rebin='false').count()
+        followers = user.followers.all()
         return render_template('profile.html',
-                                title="My Pages",
-                                user=current_user,
-                                post=posts,
-                                posts_count=posts_count,
-                                bin_posts=bin_posts,
-                                bin_count=bin_count,
-                                current=current)
-    return render_template('profile.html',
-                                title="My Pages",
-                                user=user,
-                                post=posts,
-                                posts_count=posts_count,
-                                bin_posts=bin_posts,
-                                bin_count=bin_count,
-                                current=current)
+                                    title="My Dashboard",
+                                    user=user,
+                                    post=posts,
+                                    posts_count=posts_count,
+                                    bin_posts=bin_posts,
+                                    bin_count=bin_count,
+                                    followers=followers)
+        
     return redirect(url_for('discover'))
 
 @app.route('/update', methods=['POST'])
@@ -96,8 +104,6 @@ def edit(postid):
     if current_user.is_authenticated():
         user = User.query.filter_by(nickname=current_user.nickname).first()
         posts_count = Post.query.filter_by(author=user, rebin='false').count()
-        bin_posts = Post.query.filter_by(author=user, rebin='true').all() #all recycled posts object        
-        bin_count = Post.query.filter_by(author=user, rebin='true').count() #recycled posts count
         post = Post.query.get(postid)
         if post:
             if post.author.nickname == current_user.nickname:
@@ -138,6 +144,22 @@ def show(postid):
                                     follower=follower)
     else:
         return render_template('404.html')
+
+@app.route('/delete/<vibeid>/', methods=['GET'])
+@login_required
+def delete_vibe(vibeid):
+    vibe = Vibe.query.filter_by(id=vibeid).first()
+    if vibe:
+        if current_user.is_authenticated and current_user.is_following_vibe(vibe):
+            user = User.query.filter_by(nickname=current_user.nickname).first()
+            blogic.delete_vibe(user, vibe)
+            flash("Deleted Vibe!")
+            return redirect(url_for('profile', nickname=current_user.nickname))
+        else:
+            return render_template('404.html')
+    else:
+        return render_template('404.html')
+
 
 @app.route('/delete/<postid>/', methods=['GET'])
 @login_required
@@ -226,11 +248,7 @@ def create():
 def no_page():
     return render_template('404.html')
 
-@app.route('/modal')
-def modal():
-    return render_template('modal.html')
-
-@app.route('/posts/<nickname>/new')
+@app.route('/<nickname>/posts/new')
 @login_required
 def new(nickname):
     feed = Post.query.filter_by(rebin='false').all()
@@ -289,7 +307,7 @@ def login():
     form = LoginForm()
     user = 'Stranger'
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
+        user = User.query.filter_by(nickname=form.nickname.data).first()
         if user is not None and user.verify_password(form.password.data):
             login_user(user, form.remember_me.data)
             if request.args.get('next') is url_for('auth.login'):

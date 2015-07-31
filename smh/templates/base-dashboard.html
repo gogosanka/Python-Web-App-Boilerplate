@@ -21,43 +21,7 @@
 <body background="{{ url_for('static', filename='img/bg1.jpg') }}">
 
 <!-- navigation bar goes here -->
-{% block navbar %}
-<style>
-body {
-  padding-top: 80px;
-}
-</style>
 
-<div id="navigation-bar" class="navbar navbar-default navbar-fixed-top" role="navigation">
-    <div class="container-fluid">
-        <div class="navbar-header"><a class="navbar-brand" href="/">Discover</a>
-            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-menubuilder"><span class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span>
-            </button><div>              {% with messages = get_flashed_messages() %}
-              {% if messages %}
-              <ul class=flashes>
-              {% for message in messages %}
-              {{ message }}</p>
-              {% endfor %}
-              </ul>
-              {% endif %}
-              {% endwith %}</div>
-        </div>
-        <div class="collapse navbar-collapse navbar-menubuilder">
-            <ul class="nav navbar-nav navbar-right">
-                {% if current_user.is_authenticated() %}
-                <li><a href="{{ url_for('profile', nickname=current_user.nickname) }}">Dashboard</a></li>
-                <li><a href="{{ url_for('posts', nickname=current_user.nickname) }}">Posts</a></li>
-                <li><a href="{{ url_for('new', nickname=current_user.nickname) }}">Create</a></li>
-                <li><a href="{{ url_for('auth.logout') }}">Log Out</a></li>
-                {% else %}
-                <li><a href="{{ url_for('auth.login') }}">Log In</a></li>
-                <li><a href="{{ url_for('signup') }}">Sign Up</a></li>
-                {% endif %}              
-            </ul>
-        </div>
-    </div>
-</div>
-{% endblock %}
 
     <div class="container">
       <div class="row">
@@ -149,9 +113,7 @@ body {
                   <img src="{{ user.avatar(125) }}">
                   <p><a href="{{ url_for('bin', nickname=current_user.nickname) }}" class="glyphicon glyphicon-trash">{{ bin_count }}</a></p>
                 
-                 {% if current.is_following(user) %}<i><a href="/unfollow/{{ user.nickname }}">unfollow</a></i></p>
-                {% else %}<i><a href="/follow/{{ user.nickname }}">follow</a></i></p>
-                {% endif %}</div></div>
+              
               <!-- end QUIKDASH details -->
               <!-- End loading user data if non-self profiles -->
           {% else %}

@@ -44,3 +44,13 @@ def check_username(username,password):
     if passw == password:
         session['current_user'] = username
         return redirect(url_for('posts'))
+
+def send_vibe(sender, vibe, recipient):
+    recipient.vibes.append(vibe)
+    db.session.add(recipient)
+    db.session.commit()
+
+def delete_vibe(user, vibe):
+    user.vibes.remove(vibe)
+    db.session.add(user)
+    db.session.commit()
